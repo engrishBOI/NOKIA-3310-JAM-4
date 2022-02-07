@@ -13,13 +13,22 @@ local display_canvas=love_graphics.newCanvas(screen_width,screen_height)
 -- load stuff in ty :]
 
 local testpng=love_graphics.newImage("test.png")
+local testmp3=love_audio.newSource("test.mp3","static")
+
+local nokia_font=love_graphics.newImageFont("font.png",[[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 $€£¥¤+-*/=%"'#@&_(),.;:?!\|{}<>[]'^~]],0)
+
+local audio_win=love_audio.newSource("win.mp3","static")
+local audio_beats={
+  love_audio.newSource("beat1.mp3","static"),
+  love_audio.newSource("beat2.mp3","static")
+}
 
 -- cool variables
 
 local DEBUG_YOOOOOOOOOOOOOOOOOOOOOOOOOOO=false
 local COLOR_BRIGHT={199/255,240/255,216/255,1} -- #c7f0d8
 local COLOR_DARK={67/255,82/255,61/255,1} -- #43523d
-local COLOR_DARK_HALF={67/255,82/255,61/255,1} -- #43523d
+local COOL_FX=true
 
 local display_functionality_data=love_image.newImageData(screen_width,screen_height)
 local display_functionality_imag=love_graphics.newImage(display_functionality_data)
@@ -30,10 +39,47 @@ local display_functionality_blend_imag=love_graphics.newImage(display_functional
 
 local testpngx=0
 local testpngy=0
+local testbpm={}
+
+local play_sound_paused={}
+local play_sound_playing=nil
+
+-- local music_pattern={1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,2,0,0,0,0,0,0,0}
+local music_pattern={2,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0}
+local music_next_beat_timer=0
+local music_current_beat=1
+local music_prev_beat=0
+local music_bpm=200
 
 -- functions
 
-local coolify=function(x,y,r,g,b,a)
+local play_sound=function(sound,loop)
+  -- sound=sound or ":]"
+  if sound==nil then return end
+  loop=loop or false
+  -- print(type(sound))
+  -- if type(sound)=="userdata" then return false end
+  play_sound_playing=sound
+  local paused=love_audio.pause()
+  for i,source in ipairs(paused) do
+    if source==play_sound_playing then
+      play_sound_playing:stop()
+      play_sound_playing:play()
+    else
+      table_insert(play_sound_paused,1,source)
+    end
+  end
+  play_sound_playing:play()
+  play_sound_playing:setLooping(loop)
+end
+
+local update_sound=function()
+  if play_sound_playing==nil then return end
+  if not play_sound_playing:isPlaying() and #play_sound_paused>0 then
+    play_sound_paused[1]:play()
+    table_remove(play_sound_paused,1)
+    play_sound_playing=play_sound_paused[1]
+  end
 end
 
 -- cool :sunglasses:
@@ -42,22 +88,54 @@ function LOAD(arg)
   for i,cmd in ipairs(arg) do
     if cmd=="-debug" then DEBUG_YOOOOOOOOOOOOOOOOOOOOOOOOOOO=true end
   end
+  -- play_sound(audio_beats[music_pattern[1]])
+  love_graphics.setFont(nokia_font)
 end
 
 function UPDATE(dt)
   local dt2=dt*60
   
+  music_next_beat_timer=music_next_beat_timer+dt2
+  
+  if music_next_beat_timer>=800/music_bpm then
+    music_next_beat_timer=0
+    music_prev_beat=music_current_beat
+    -- music_current_beat=music_current_beat+1
+    music_current_beat=math_fmod(music_current_beat,#music_pattern)+1
+    play_sound()
+  end
+  
+  if music_prev_beat~=music_current_beat then
+    music_prev_beat=music_current_beat
+    play_sound(audio_beats[music_pattern[music_current_beat]])
+  end
+  
   if love_keyboard.isDown("w") then testpngy=testpngy-1 end
   if love_keyboard.isDown("a") then testpngx=testpngx-1 end
   if love_keyboard.isDown("s") then testpngy=testpngy+1 end
   if love_keyboard.isDown("d") then testpngx=testpngx+1 end
+  
+  update_sound()
 end
 
 function DRAW()
   love_graphics.draw(testpng,testpngx,testpngy)
+  -- love_graphics.print(6000/music_bpm.." "..music_next_beat_timer)
+  -- local avg=0
+  -- for i,time in ipairs(testbpm) do
+  --   avg=avg+time
+  -- end
+  -- love_graphics.print(music_prev_beat.." "..music_current_beat.." "..music_pattern[music_current_beat])
+  local y=8
+  for i,source in ipairs(play_sound_paused) do
+    love_graphics.print(to_str(source),-57,y)
+    y=y+8
+  end
 end
 
 function love.keypressed(key)
+  -- if key=="space" then play_sound(audio_win) end
+  if key=="space" then table_insert(testbpm,music_next_beat_timer) music_next_beat_timer=0 end
 end
 
 -- dont care l+ratio
@@ -113,8 +191,6 @@ function love.run()
       love_graphics.setCanvas(display_canvas)
       love_graphics.clear(COLOR_BRIGHT)
       
-      -- love_graphics.setColor(COLOR_DARK_HALF)
-      -- love_graphics.draw(display_functionality_blend_imag)
       
       display_functionality_data=screen_canvas:newImageData()
       local r,g,b,a,avg
@@ -133,14 +209,21 @@ function love.run()
       love_graphics.setColor(COLOR_DARK)
       love_graphics.draw(display_functionality_imag)
       
+      if COOL_FX then
+        love_graphics.setColor(1,1,1,.5)
+        love_graphics.draw(display_functionality_blend_imag)
+      end
+      
       love_graphics.origin()
       love_graphics.scale(screen_scale,screen_scale)
       love_graphics.setCanvas()
       love_graphics.setColor(1.0,1.0,1.0,1.0)
       love_graphics.clear(0,0,0,1)
       
-      display_functionality_blend_data=display_canvas:newImageData()
-      display_functionality_blend_imag:replacePixels(display_functionality_blend_data)
+      if COOL_FX then
+        display_functionality_blend_data=display_canvas:newImageData()
+        display_functionality_blend_imag:replacePixels(display_functionality_blend_data)
+      end
       
       love_graphics.draw(display_canvas,love_graphics.getWidth()/screen_scale/2-screen_width/2,love_graphics.getHeight()/screen_scale/2-screen_height/2)
       -- love_graphics.draw(screen_canvas,love_graphics.getWidth()/screen_scale/2-screen_width/2,love_graphics.getHeight()/screen_scale/2-screen_height/2)

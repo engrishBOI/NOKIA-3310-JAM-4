@@ -58,8 +58,8 @@ tbl_to_str=function(table)
       result=result..tostring(v)
     elseif type(v)=="number" then
       result=result..tostring(v)
-    else
-      result=result.."\""..v.."\""
+    elseif type(v)=="string" then
+      result=result.."[["..v.."]]"
     end
     result=result..","
   end
