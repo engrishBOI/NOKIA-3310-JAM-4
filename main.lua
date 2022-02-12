@@ -18,10 +18,12 @@ local testmp3=love_audio.newSource("test.mp3","static")
 local nokia_font=love_graphics.newImageFont("font.png",[[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 $€£¥¤+-*/=%"'#@&_(),.;:?!\|{}<>[]'^~]],0)
 
 local audio_win=love_audio.newSource("win.mp3","static")
-local audio_beats={
-  love_audio.newSource("beat1.mp3","static"),
-  love_audio.newSource("beat2.mp3","static")
-}
+local audio_beats={}
+for i=1,100 do
+  if love_filesystem.getInfo("beat"..i..".mp3") then
+    table_insert(audio_beats,love_audio.newSource("beat"..i..".mp3","static"))
+  else break end
+end
 
 -- cool variables
 
@@ -45,7 +47,12 @@ local play_sound_paused={}
 local play_sound_playing=nil
 
 -- local music_pattern={1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,2,0,0,0,0,0,0,0}
-local music_pattern={2,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0}
+local music_pattern={
+  -- 2,0,0,0,0,0,0,4,2,0,5,0,2,0,0,1,
+  -- 3,0,2,5,4,4,5,0,1,3,0,1,4,5,1,0
+  4,4,4,4,5,5,5,5,4,4,4,4,5,5,5,5,
+  4,4,4,4,5,5,5,5,4,4,4,4,5,5,5,5
+}
 local music_next_beat_timer=0
 local music_current_beat=1
 local music_prev_beat=0
@@ -225,8 +232,8 @@ function love.run()
         display_functionality_blend_imag:replacePixels(display_functionality_blend_data)
       end
       
-      love_graphics.draw(display_canvas,love_graphics.getWidth()/screen_scale/2-screen_width/2,love_graphics.getHeight()/screen_scale/2-screen_height/2)
-      -- love_graphics.draw(screen_canvas,love_graphics.getWidth()/screen_scale/2-screen_width/2,love_graphics.getHeight()/screen_scale/2-screen_height/2)
+      -- love_graphics.draw(display_canvas,love_graphics.getWidth()/screen_scale/2-screen_width/2,love_graphics.getHeight()/screen_scale/2-screen_height/2)
+      love_graphics.draw(screen_canvas,love_graphics.getWidth()/screen_scale/2-screen_width/2,love_graphics.getHeight()/screen_scale/2-screen_height/2)
       
       
       love_graphics.pop()
