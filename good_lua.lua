@@ -46,6 +46,13 @@ end
 
 to_str=tostring
 
+int_to_str=function(int,length)
+  local str=tostring(int)
+  length=length or #str
+  if length>#str then str=string_rep("0",length-#str)..str end
+  return str
+end
+
 tbl_to_str=function(table)
   local result="{"
   for k,v in pairs(table) do
@@ -69,12 +76,13 @@ tbl_to_str=function(table)
   return result.."}"
 end
 
+
+str_to_int=tonumber
+
 bool_to_int=function(bool)
   if bool then return 1 else return 0 end
   return nil
 end
-
-str_to_int=tonumber
 
 to_int=function(int,base)
   local int_type=type(int)
@@ -83,6 +91,7 @@ to_int=function(int,base)
   elseif int_type=="number" then return int end
   return nil
 end
+
 
 int_to_bool=function(int)
   if int>0 then return true end
@@ -116,6 +125,21 @@ table_copy=function(table)
   end
   return copy
 end
+
+string_byte=string.byte
+string_char=string.char
+string_dump=string.dump
+string_find=string.find
+string_format=string.format
+string_gmatch=string.gmatch
+string_gsub=string.gsub
+string_len=string.len
+string_lower=string.lower
+string_match=string.match
+string_rep=string.rep
+string_reverse=string.reverse
+string_sub=string.sub
+string_upper=string.upper
 
 love_audio=love.audio
 love_data=love.data
